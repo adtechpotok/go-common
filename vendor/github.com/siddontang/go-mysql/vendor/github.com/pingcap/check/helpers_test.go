@@ -1,7 +1,7 @@
 // These tests verify the inner workings of the helper methods associated
 // with check.T.
 
-package check
+package check_test
 
 import (
 	"os"

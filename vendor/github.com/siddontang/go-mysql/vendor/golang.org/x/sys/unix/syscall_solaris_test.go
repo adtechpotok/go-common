@@ -4,7 +4,7 @@
 
 // +build solaris
 
-package unix
+package unix_test
 
 import (
 	"os/exec"

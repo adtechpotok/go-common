@@ -4,7 +4,7 @@
 
 // +build linux
 
-package unix
+package unix_test
 
 import (
 	"io/ioutil"

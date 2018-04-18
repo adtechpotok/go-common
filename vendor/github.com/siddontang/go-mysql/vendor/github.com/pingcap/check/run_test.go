@@ -1,6 +1,6 @@
 // These tests verify the test running logic.
 
-package check
+package check_test
 
 import (
 	"errors"

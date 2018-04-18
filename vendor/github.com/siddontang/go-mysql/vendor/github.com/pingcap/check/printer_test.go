@@ -1,4 +1,4 @@
-package check
+package check_test
 
 import (
 	. "github.com/pingcap/check"

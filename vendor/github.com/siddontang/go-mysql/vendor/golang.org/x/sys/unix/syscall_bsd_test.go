@@ -4,7 +4,7 @@
 
 // +build darwin dragonfly freebsd openbsd
 
-package unix
+package unix_test
 
 import (
 	"os/exec"

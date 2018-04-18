@@ -1,7 +1,7 @@
 // This file contains just a few generic helpers which are used by the
 // other test files.
 
-package check
+package check_test
 
 import (
 	"flag"

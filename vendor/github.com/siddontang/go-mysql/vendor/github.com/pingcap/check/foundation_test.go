@@ -4,7 +4,7 @@
 // still have to be taken when using external functions, since they should
 // of course not rely on functionality tested here.
 
-package check
+package check_test
 
 import (
 	"fmt"

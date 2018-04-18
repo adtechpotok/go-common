@@ -10,7 +10,7 @@
 // Do not assume *any* internal functionality works as expected besides
 // what's actually tested here.
 
-package check
+package check_test
 
 import (
 	"fmt"

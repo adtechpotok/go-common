@@ -4,7 +4,7 @@
 
 // +build windows
 
-package windows
+package windows_test
 
 import (
 	"testing"

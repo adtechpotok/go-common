@@ -1,6 +1,6 @@
 // Tests for the behavior of the test fixture system.
 
-package check
+package check_test
 
 import (
 	. "github.com/pingcap/check"
