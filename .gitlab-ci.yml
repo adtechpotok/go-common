@@ -7,7 +7,7 @@ test:
     stage: test
     variables:
         BUILD_DIR: /home/begund/rpmbuild/BUILD
-        PROJECT_DIR: /home/begund/rpmbuild/BUILD/src/go-sea
+        PROJECT_DIR: /home/begund/rpmbuild/BUILD/src/go-common
         SPEC_DIR: /home/begund/rpmbuild/SPECS
         RPMS_DIR: /home/begund/rpmbuild/RPMS
         RELEASE: el7.centos.x86_64
