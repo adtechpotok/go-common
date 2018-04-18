@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"github.com/pkg/errors"
-	orm "gitlab.rambler.ru/More/go-orm/src"
+	orm "github.com/adtechpotok/go-orm/src"
 )
 
 type WriteConfig struct {

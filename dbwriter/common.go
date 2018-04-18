@@ -6,7 +6,7 @@ import (
 	"github.com/json-iterator/go"
 	"fmt"
 	"time"
-	orm "gitlab.rambler.ru/More/go-orm/src"
+	orm "github.com/adtechpotok/go-orm/src"
 )
 func parseTagSetting(tags reflect.StructTag) map[string]string {
 	setting := map[string]string{}
