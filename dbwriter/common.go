@@ -1,4 +1,4 @@
-package viewwriter
+package dbwriter
 
 import (
 	"strings"
@@ -8,6 +8,7 @@ import (
 	"time"
 	orm "github.com/adtechpotok/go-orm"
 )
+
 func parseTagSetting(tags reflect.StructTag) map[string]string {
 	setting := map[string]string{}
 	for _, str := range []string{tags.Get("sql"), tags.Get("gorm")} {
@@ -25,7 +26,7 @@ func parseTagSetting(tags reflect.StructTag) map[string]string {
 	return setting
 }
 
-func makeSqlValue(element interface{}) string {
+func makeSqlValue(element interface{}, serverId int) string {
 	var result string
 	v := reflect.ValueOf(element)
 	s := reflect.Indirect(v)
@@ -96,8 +97,8 @@ func makeSqlField(element interface{}) string {
 	return result
 }
 
-func makeInsertQuery(v orm.SchemaPotok) string {
-	res := fmt.Sprintf("INSERT INTO `%s`.`%s` (%s) VALUES (%s)", v.SchemaName(), v.TableName(), makeSqlField(v), makeSqlValue(v))
+func makeInsertQuery(v orm.SchemaPotok, serverId int) string {
+	res := fmt.Sprintf("INSERT INTO `%s`.`%s` (%s) VALUES (%s)", v.SchemaName(), v.TableName(), makeSqlField(v), makeSqlValue(v, serverId))
 	if t, ok := v.(AfterSqlInterface); ok {
 		res += " " + t.AfterSql()
 	}
