@@ -133,8 +133,11 @@ func (m *Writer) readFiles() error {
 	if err != nil {
 		m.config.Log.Error("Cannot read from file", err)
 	}
-
+	fileCounter := 0
 	for _, f := range files {
+		if fileCounter > 100 {
+			return nil
+		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
 		if err != nil {
 			m.config.Log.Error(err)
@@ -155,14 +158,24 @@ func (m *Writer) readFiles() error {
 
 		m.config.Log.Infof("FROM FILE inserted %d rows", i)
 
-		err = os.Remove(m.config.FilePath + f.Name())
+		deletedFileName := m.config.FilePath + "deleted" + f.Name()
+		err = os.Rename(m.config.FilePath+f.Name(), deletedFileName)
 		if err != nil {
 			tx.Rollback()
 			return errors.New("Cannot delete file")
-
 		}
-		tx.Commit()
+		err = tx.Commit()
+		if err == nil {
+			err = os.Remove(deletedFileName)
+			if err != nil {
+				m.config.Log.Errorf("Cannot delete file %s", deletedFileName)
 
+			}
+		} else {
+			os.Rename(deletedFileName, m.config.FilePath+f.Name())
+			m.config.Log.Errorf("%v transaction err", err)
+		}
+		fileCounter++
 	}
 	if len(files) > 0 {
 		m.attemps = 0
