@@ -1,4 +1,4 @@
-package viewwriter
+package dbwriter
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ func TestParseTagSetting(t *testing.T) {
 		0,
 	}
 
-	stringSql := makeInsertQuery(m)
+	stringSql := makeInsertQuery(m,1)
 
 	if stringSql == "" {
 		t.Error("All bad")

@@ -1,4 +1,4 @@
-package viewwriter
+package dbwriter
 
 import (
 	"sync"
@@ -22,83 +22,92 @@ type WriteConfig struct {
 	MaxConnectTimeSec time.Duration
 }
 
+type Writer struct {
+	config      WriteConfig
+	writeBuffer []orm.SchemaPotok
+	mysqlBuffer []orm.SchemaPotok
+	mutex       *sync.RWMutex
+	attemps     int
+}
+
+func New(config WriteConfig) *Writer {
+	m := &Writer{config: config}
+	m.mutex = &sync.RWMutex{}
+	go m.work()
+
+	return m
+}
+
 const attempsLimit = 2
 
-var serverId = 0
-var writeBuffer = make([]orm.SchemaPotok, 0)
-var mysqlBuffer = make([]orm.SchemaPotok, 0)
-var attemps = 0
-var mutex = &sync.RWMutex{}
-
-func AppendData(data ...orm.SchemaPotok) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	mysqlBuffer = append(mysqlBuffer, data...)
+func (m *Writer) Append(data ...orm.SchemaPotok) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.mysqlBuffer = append(m.mysqlBuffer, data...)
 }
 
-func Writer(conf WriteConfig) {
-	c := time.Tick(conf.TickTimeMs * time.Millisecond)
-	serverId = conf.ServerId
-	conf.Db.DB().SetConnMaxLifetime(time.Second * conf.MaxConnectTimeSec)
+func (m *Writer) work() {
+	c := time.Tick(m.config.TickTimeMs * time.Millisecond)
+	m.config.Db.DB().SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
 	for range c {
-		mysqlWrite(&conf)
+		m.mysqlWrite()
 	}
 }
 
-func mysqlWrite(conf *WriteConfig) {
+func (m *Writer) mysqlWrite() {
 
 	//Смотрим остались ли данные с прошлой записи
-	if len(writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
-		mutex.Lock()
-		writeBuffer = mysqlBuffer
-		mysqlBuffer = make([]orm.SchemaPotok, 0)
-		mutex.Unlock()
+	if len(m.writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
+		m.mutex.Lock()
+		m.writeBuffer = m.mysqlBuffer
+		m.mysqlBuffer = make([]orm.SchemaPotok, 0)
+		m.mutex.Unlock()
 	}
 
-	if conf.Db.DB().Ping() == nil { //если конект есть
-		err := readFiles(conf) //записываем все файлы
+	if m.config.Db.DB().Ping() == nil { //если коннект есть
+		err := m.readFiles() //записываем все файлы
 		if err != nil {
 			return
 		}
 	}
 
-	if len(writeBuffer) == 0 { // если данных нет прекращаем работу
+	if len(m.writeBuffer) == 0 { // если данных нет прекращаем работу
 		return
 	}
-	conf.Log.Infof("Got %d element for mysql write", len(writeBuffer))
-	if attemps > attempsLimit { //используем попытки для понимания пишем мы в файл или в базу
-		if err := fileWrite(conf); err != nil {
-			conf.Log.Error(err, "Cannot write to file.")
+	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
+	if m.attemps > attempsLimit { //используем попытки для понимания пишем мы в файл или в базу
+		if err := m.fileWrite(); err != nil {
+			m.config.Log.Error(err, "Cannot write to file.")
 			return
 		}
-		writeBuffer = make([]orm.SchemaPotok, 0)
+		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
 
-	if conf.Db.DB().Ping() == nil { //если конект есть
+	if m.config.Db.DB().Ping() == nil { //если конект есть
 		i := 0
-		for _, val := range getQueryData() {
-			_, err := conf.Db.DB().Exec(val)
+		for _, val := range m.getQueryData() {
+			_, err := m.config.Db.DB().Exec(val)
 			if err != nil {
-				conf.Log.Error("Error while writing in db", err)
-				attemps++
-				writeBuffer = writeBuffer[i:]
+				m.config.Log.Error("Error while writing in db", err)
+				m.attemps++
+				m.writeBuffer = m.writeBuffer[i:]
 				return
 			}
 			i++
 		}
 
-		conf.Log.Infof("Inserted %d rows", i)
-		writeBuffer = make([]orm.SchemaPotok, 0)
-		attemps = 0
+		m.config.Log.Infof("Inserted %d rows", i)
+		m.writeBuffer = make([]orm.SchemaPotok, 0)
+		m.attemps = 0
 	} else {
-		attemps++
+		m.attemps++
 	}
 
 }
 
-func fileWrite(conf *WriteConfig) error {
+func (m *Writer) fileWrite() error {
 
-	fileName := fmt.Sprintf("%s%d.sql", conf.FilePath, time.Now().UnixNano())
+	fileName := fmt.Sprintf("%s%d.sql", m.config.FilePath, time.Now().UnixNano())
 	file, err := os.Create(fileName)
 	defer file.Close()
 
@@ -106,47 +115,47 @@ func fileWrite(conf *WriteConfig) error {
 		return err
 	}
 
-	file.WriteString(strings.Join(getQueryData(), "\n"))
+	file.WriteString(strings.Join(m.getQueryData(), "\n"))
 	return nil
 }
 
-func getQueryData() []string {
+func (m *Writer) getQueryData() []string {
 	var res []string
-	for _, val := range writeBuffer {
-		k := makeInsertQuery(val)
+	for _, val := range m.writeBuffer {
+		k := makeInsertQuery(val, m.config.ServerId)
 		res = append(res, k)
 	}
 	return res
 }
 
-func readFiles(conf *WriteConfig) error {
-	files, err := ioutil.ReadDir("./" + conf.FilePath)
+func (m *Writer) readFiles() error {
+	files, err := ioutil.ReadDir("./" + m.config.FilePath)
 	if err != nil {
-		conf.Log.Error("Cannot read from file", err)
+		m.config.Log.Error("Cannot read from file", err)
 	}
 
 	for _, f := range files {
-		b, err := ioutil.ReadFile(conf.FilePath + f.Name())
+		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
 		if err != nil {
-			conf.Log.Error(err)
+			m.config.Log.Error(err)
 		}
 		str := strings.Split(string(b), "\n")
 		i := 0
-		tx, _ := conf.Db.DB().Begin()
+		tx, _ := m.config.Db.DB().Begin()
 		for _, val := range str {
 			_, err := tx.Exec(val)
 			if err != nil {
-				conf.Log.Error("Error while writing in db from file", err)
-				attemps++
+				m.config.Log.Error("Error while writing in db from file", err)
+				m.attemps++
 				tx.Rollback()
 				return err
 			}
 			i++
 		}
 
-		conf.Log.Infof("FROM FILE inserted %d rows", i)
+		m.config.Log.Infof("FROM FILE inserted %d rows", i)
 
-		err = os.Remove(conf.FilePath + f.Name())
+		err = os.Remove(m.config.FilePath + f.Name())
 		if err != nil {
 			tx.Rollback()
 			return errors.New("Cannot delete file")
@@ -156,7 +165,7 @@ func readFiles(conf *WriteConfig) error {
 
 	}
 	if len(files) > 0 {
-		attemps = 0
+		m.attemps = 0
 	}
 
 	return nil
