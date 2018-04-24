@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
+	"github.com/adtechpotok/silog"
 	"io/ioutil"
 	"strings"
 	"github.com/pkg/errors"
@@ -15,7 +15,6 @@ import (
 
 type WriteConfig struct {
 	Db                *gorm.DB
-	Log               *logrus.Logger
 	FilePath          string
 	ServerId          int
 	TickTimeMs        time.Duration
@@ -65,10 +64,10 @@ func mysqlWrite(conf *WriteConfig) {
 	if len(writeBuffer) == 0 { // если данных нет прекращаем работу
 		return
 	}
-	conf.Log.Infof("Got %d element for mysql write", len(writeBuffer))
+	silog.Infof("Got %d element for mysql write", len(writeBuffer))
 	if attemps > attempsLimit { //используем попытки для понимания пишем мы в файл или в базу
 		if err := fileWrite(conf); err != nil {
-			conf.Log.Error(err, "Cannot write to file.")
+			silog.Error(err, "Cannot write to file.")
 			return
 		}
 		writeBuffer = make([]orm.SchemaPotok, 0)
@@ -79,7 +78,7 @@ func mysqlWrite(conf *WriteConfig) {
 		for _, val := range getQueryData() {
 			_, err := conf.Db.DB().Exec(val)
 			if err != nil {
-				conf.Log.Error("Error while writing in db", err)
+				silog.Error("Error while writing in db", err)
 				attemps++
 				writeBuffer = writeBuffer[i:]
 				return
@@ -87,7 +86,7 @@ func mysqlWrite(conf *WriteConfig) {
 			i++
 		}
 
-		conf.Log.Infof("Inserted %d rows", i)
+		silog.Infof("Inserted %d rows", i)
 		writeBuffer = make([]orm.SchemaPotok, 0)
 		attemps = 0
 	} else {
@@ -122,13 +121,13 @@ func getQueryData() []string {
 func readFiles(conf *WriteConfig) error {
 	files, err := ioutil.ReadDir("./" + conf.FilePath)
 	if err != nil {
-		conf.Log.Error("Cannot read from file", err)
+		silog.Error("Cannot read from file", err)
 	}
 
 	for _, f := range files {
 		b, err := ioutil.ReadFile(conf.FilePath + f.Name())
 		if err != nil {
-			conf.Log.Error(err)
+			silog.Error(err)
 		}
 		str := strings.Split(string(b), "\n")
 		i := 0
@@ -136,7 +135,7 @@ func readFiles(conf *WriteConfig) error {
 		for _, val := range str {
 			_, err := tx.Exec(val)
 			if err != nil {
-				conf.Log.Error("Error while writing in db from file", err)
+				silog.Error("Error while writing in db from file", err)
 				attemps++
 				tx.Rollback()
 				return err
@@ -144,7 +143,7 @@ func readFiles(conf *WriteConfig) error {
 			i++
 		}
 
-		conf.Log.Infof("FROM FILE inserted %d rows", i)
+		silog.Infof("FROM FILE inserted %d rows", i)
 
 		err = os.Remove(conf.FilePath + f.Name())
 		if err != nil {
