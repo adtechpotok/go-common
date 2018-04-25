@@ -9,7 +9,7 @@ import (
 	"strings"
 	"github.com/pkg/errors"
 	orm "github.com/adtechpotok/go-orm"
-	"logrus-singleton"
+	"github.com/adtechpotok/silog"
 	"database/sql"
 )
 
