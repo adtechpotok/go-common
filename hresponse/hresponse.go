@@ -1,6 +1,6 @@
 package hresponse
 
-import "github.com/sirupsen/logrus"
+import "github.com/adtechpotok/silog/logrus"
 
 type HresponseConfig struct {
 	Logger logrus.FieldLogger
@@ -8,6 +8,6 @@ type HresponseConfig struct {
 
 var hresponse HresponseConfig
 
-func New (config HresponseConfig){
+func New(config HresponseConfig) {
 	hresponse = config
 }

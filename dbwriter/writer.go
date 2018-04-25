@@ -15,10 +15,10 @@ import (
 
 //Config to writer
 type WriteConfig struct {
-	Db                sql.DB //Db instance
-	Log               silog.StandardLogger // Log instance
-	FilePath          string // Path to write file
-	ServerId          int // Current server id
+	Db                sql.DB        //Db instance
+	Log               silog.Logger  // Log instance
+	FilePath          string        // Path to write file
+	ServerId          int           // Current server id
 	TickTimeMs        time.Duration //Tick for work
 	MaxConnectTimeSec time.Duration // Connect max time limit
 }
