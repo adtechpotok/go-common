@@ -3,8 +3,6 @@ package hresponse
 import (
 	"net/http"
 	"fmt"
-	"runtime/debug"
-	"github.com/adtechpotok/silog"
 )
 
 var ServerError = ErrorResponse{http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError}
@@ -26,13 +24,6 @@ func (res ErrorResponse) RenderHtml(w http.ResponseWriter, _ *http.Request) {
 func (res ErrorResponse) RenderJson(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(res.status)
 	ResultJson(res, w)
-}
-
-func RecoverController(w http.ResponseWriter, request *http.Request) {
-	if r := recover(); r != nil {
-		silog.Error(r, " ", string(debug.Stack()))
-		ServerError.RenderHtml(w, request)
-	}
 }
 
 func (res ErrorResponse) ServerHTTP(w http.ResponseWriter, _ *http.Request) {

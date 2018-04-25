@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"github.com/json-iterator/go"
 	"github.com/sirupsen/logrus"
-	"github.com/adtechpotok/silog"
 )
 
 func ResultJson(result interface{}, w http.ResponseWriter) {
@@ -15,7 +14,7 @@ func ResultJson(result interface{}, w http.ResponseWriter) {
 	}
 	js, err := jsoniter.Marshal(result)
 	if err != nil {
-		silog.WithFields(logrus.Fields{"error": err,}).Warning("Json encode failed")
+		hresponse.Logger.WithFields(logrus.Fields{"error": err,}).Warning("Json encode failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
