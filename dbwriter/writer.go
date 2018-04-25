@@ -1,68 +1,66 @@
 package dbwriter
 
 import (
+	"sync"
 	"time"
 	"fmt"
 	"os"
-	"github.com/adtechpotok/silog"
 	"io/ioutil"
 	"strings"
 	"github.com/pkg/errors"
 	orm "github.com/adtechpotok/go-orm"
+	"logrus-singleton"
 	"database/sql"
 )
 
-const attempsLimit = 2
-
-type BaseWriter interface {
-	mysqlWrite(conf *WriteConfig)
-	setConnMaxLifetime(seconds time.Duration)
-}
-
+//Config to writer
 type WriteConfig struct {
-	FilePath          string
-	ServerId          int
-	TickTimeMs        time.Duration
-	MaxConnectTimeSec time.Duration
+	Db                sql.DB //Db instance
+	Log               silog.StandardLogger // Log instance
+	FilePath          string // Path to write file
+	ServerId          int // Current server id
+	TickTimeMs        time.Duration //Tick for work
+	MaxConnectTimeSec time.Duration // Connect max time limit
 }
 
+// Write sql to DB or file
 type Writer struct {
-	Db          sql.DB
-	Logger      silog.StandardLogger
+	config      WriteConfig
 	writeBuffer []orm.SchemaPotok
 	mysqlBuffer []orm.SchemaPotok
 	mutex       *sync.RWMutex
 	attemps     int
 }
 
-func (m *Writer) setConnMaxLifetime(seconds time.Duration) {
-	m.Db.SetConnMaxLifetime(time.Second * seconds)
-}
-
+// Return new writer instance
 func New(config WriteConfig) *Writer {
 	m := &Writer{config: config}
 	m.mutex = &sync.RWMutex{}
-	go m.work(&config)
+	go m.work()
 
 	return m
 }
 
+const attempsLimit = 2
+
+// Append data to mysqlBuffer
 func (m *Writer) Append(data ...orm.SchemaPotok) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.mysqlBuffer = append(m.mysqlBuffer, data...)
 }
 
-func (m *Writer) work(config *WriteConfig) {
+// Start writer work
+func (m *Writer) work() {
 	c := time.Tick(m.config.TickTimeMs * time.Millisecond)
-	m.config.Db.DB().SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
+	m.config.Db.SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
 	for range c {
-		m.mysqlWrite(config)
+		m.mysqlWrite()
 	}
 }
 
-func (m *Writer) mysqlWrite(conf *WriteConfig) {
-
+// Write mysql to file or db
+func (m *Writer) mysqlWrite() {
 	//Смотрим остались ли данные с прошлой записи
 	if len(m.writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
 		m.mutex.Lock()
@@ -71,9 +69,8 @@ func (m *Writer) mysqlWrite(conf *WriteConfig) {
 		m.mutex.Unlock()
 	}
 
-	if m.Db.Ping() == nil { //если коннект есть
+	if m.config.Db.Ping() == nil { //если коннект есть
 		err := m.readFiles() //записываем все файлы
-}
 		if err != nil {
 			return
 		}
@@ -82,22 +79,21 @@ func (m *Writer) mysqlWrite(conf *WriteConfig) {
 	if len(m.writeBuffer) == 0 { // если данных нет прекращаем работу
 		return
 	}
-  
-	m.Logger.Infof("Got %d element for mysql write", len(m.writeBuffer))
+	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
 	if m.attemps > attempsLimit { //используем попытки для понимания пишем мы в файл или в базу
-		if err := m.fileWrite(conf); err != nil {
-			m.Logger.Error(err, "Cannot write to file.")
+		if err := m.fileWrite(); err != nil {
+			m.config.Log.Error(err, "Cannot write to file.")
 			return
 		}
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
 
-	if m.Db.Ping() == nil { //если конект есть
+	if m.config.Db.Ping() == nil { //если конект есть
 		i := 0
 		for _, val := range m.getQueryData() {
-			_, err := m.Db.Exec(val)
+			_, err := m.config.Db.Exec(val)
 			if err != nil {
-				m.Logger.Error("Error while writing in db", err)
+				m.config.Log.Error("Error while writing in db", err)
 				m.attemps++
 				m.writeBuffer = m.writeBuffer[i:]
 				return
@@ -105,7 +101,7 @@ func (m *Writer) mysqlWrite(conf *WriteConfig) {
 			i++
 		}
 
-		m.Logger.Infof("Inserted %d rows", i)
+		m.config.Log.Infof("Inserted %d rows", i)
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 		m.attemps = 0
 	} else {
@@ -114,17 +110,8 @@ func (m *Writer) mysqlWrite(conf *WriteConfig) {
 
 }
 
-
-func (m *Writer) getQueryData() []string {
-	var res []string
-	for _, val := range m.writeBuffer {
-		k := makeInsertQuery(val)
-		res = append(res, k)
-	}
-	return res
-}
-
-func (m *Writer) fileWrite(conf *WriteConfig) error {
+// Write sql to file
+func (m *Writer) fileWrite() error {
 	fileName := fmt.Sprintf("%s%d.sql", m.config.FilePath, time.Now().UnixNano())
 	file, err := os.Create(fileName)
 	defer file.Close()
@@ -137,10 +124,21 @@ func (m *Writer) fileWrite(conf *WriteConfig) error {
 	return nil
 }
 
-func (m *Writer) readFiles(conf *WriteConfig) error {
-	files, err := ioutil.ReadDir("./" + conf.FilePath)
+// Get sql from writeBuffer
+func (m *Writer) getQueryData() []string {
+	var res []string
+	for _, val := range m.writeBuffer {
+		k := makeInsertQuery(val, m.config.ServerId)
+		res = append(res, k)
+	}
+	return res
+}
+
+// Read files with sql
+func (m *Writer) readFiles() error {
+	files, err := ioutil.ReadDir("./" + m.config.FilePath)
 	if err != nil {
-		m.Logger.Error("Cannot read from file", err)
+		m.config.Log.Error("Cannot read from file", err)
 	}
 	fileCounter := 0
 	for _, f := range files {
@@ -149,15 +147,15 @@ func (m *Writer) readFiles(conf *WriteConfig) error {
 		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
 		if err != nil {
-			m.Logger.Error(err)
+			m.config.Log.Error(err)
 		}
 		str := strings.Split(string(b), "\n")
 		i := 0
-		tx, _ := m.Db.Begin()
+		tx, _ := m.config.Db.Begin()
 		for _, val := range str {
 			_, err := tx.Exec(val)
 			if err != nil {
-				m.Logger.Error("Error while writing in db from file", err)
+				m.config.Log.Error("Error while writing in db from file", err)
 				m.attemps++
 				tx.Rollback()
 				return err
@@ -165,7 +163,7 @@ func (m *Writer) readFiles(conf *WriteConfig) error {
 			i++
 		}
 
-		m.Logger.Infof("FROM FILE inserted %d rows", i)
+		m.config.Log.Infof("FROM FILE inserted %d rows", i)
 
 		deletedFileName := m.config.FilePath + "deleted" + f.Name()
 		err = os.Rename(m.config.FilePath+f.Name(), deletedFileName)
