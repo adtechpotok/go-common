@@ -34,3 +34,8 @@ func RecoverController(w http.ResponseWriter, request *http.Request) {
 		ServerError.RenderHtml(w, request)
 	}
 }
+
+func (res ErrorResponse) ServerHTTP(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(res.status)
+	ResultJson(res, w)
+}
