@@ -2,11 +2,10 @@ package http_response
 
 import "net/http"
 
-type Error struct{
+type Error struct {
 	Error    error
 	Response Response
 }
-
 
 type Response interface {
 	Render(w http.ResponseWriter)
