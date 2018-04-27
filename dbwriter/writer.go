@@ -13,13 +13,13 @@ import (
 	"time"
 )
 
-//Config to writer
+// Config to writer
 type WriteConfig struct {
-	Db                sql.DB        //Db instance
+	Db                *sql.DB       // Db instance
 	Log               silog.Logger  // Log instance
 	FilePath          string        // Path to write file
 	ServerId          int           // Current server id
-	TickTimeMs        time.Duration //Tick for work
+	TickTimeMs        time.Duration // Tick for work
 	MaxConnectTimeSec time.Duration // Connect max time limit
 }
 
@@ -61,7 +61,7 @@ func (m *Writer) work() {
 
 // Write mysql to file or db
 func (m *Writer) mysqlWrite() {
-	//Смотрим остались ли данные с прошлой записи
+	// Смотрим остались ли данные с прошлой записи
 	if len(m.writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
 		m.mutex.Lock()
 		m.writeBuffer = m.mysqlBuffer
@@ -69,8 +69,8 @@ func (m *Writer) mysqlWrite() {
 		m.mutex.Unlock()
 	}
 
-	if m.config.Db.Ping() == nil { //если коннект есть
-		err := m.readFiles() //записываем все файлы
+	if m.config.Db.Ping() == nil { // если коннект есть
+		err := m.readFiles() // записываем все файлы
 		if err != nil {
 			return
 		}
@@ -80,7 +80,7 @@ func (m *Writer) mysqlWrite() {
 		return
 	}
 	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
-	if m.attemps > attempsLimit { //используем попытки для понимания пишем мы в файл или в базу
+	if m.attemps > attempsLimit { // используем попытки для понимания пишем мы в файл или в базу
 		if err := m.fileWrite(); err != nil {
 			m.config.Log.Error(err, "Cannot write to file.")
 			return
@@ -88,7 +88,7 @@ func (m *Writer) mysqlWrite() {
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
 
-	if m.config.Db.Ping() == nil { //если конект есть
+	if m.config.Db.Ping() == nil { // если конект есть
 		i := 0
 		for _, val := range m.getQueryData() {
 			_, err := m.config.Db.Exec(val)
