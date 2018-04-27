@@ -1,8 +1,8 @@
 package http_response
 
 import (
-	"net/http"
 	"github.com/json-iterator/go"
+	"net/http"
 )
 
 // Struct to JSON response

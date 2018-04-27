@@ -1,10 +1,10 @@
 package goroutineIdHook
 
 import (
-	"testing"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"fmt"
+	"testing"
 )
 
 func TestFire(t *testing.T) {

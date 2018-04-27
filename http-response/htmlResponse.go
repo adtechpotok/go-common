@@ -1,8 +1,8 @@
 package http_response
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 )
 
 // Struct to html response

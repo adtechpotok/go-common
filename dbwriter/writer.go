@@ -1,16 +1,16 @@
 package dbwriter
 
 import (
-	"sync"
-	"time"
+	"database/sql"
 	"fmt"
-	"os"
-	"io/ioutil"
-	"strings"
-	"github.com/pkg/errors"
 	orm "github.com/adtechpotok/go-orm"
 	"github.com/adtechpotok/silog"
-	"database/sql"
+	"github.com/pkg/errors"
+	"io/ioutil"
+	"os"
+	"strings"
+	"sync"
+	"time"
 )
 
 //Config to writer
