@@ -10,7 +10,7 @@ type JSONResponse struct {
 	BaseResponse
 }
 
-//RenderJson convert the response to JSON and send it to client
+// RenderJson convert the response to JSON and send it to client
 func (res JSONResponse) Render(w http.ResponseWriter) {
 	js, err := jsoniter.Marshal(res)
 	if err != nil {
