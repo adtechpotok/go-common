@@ -5,23 +5,25 @@ import (
 	"time"
 	"fmt"
 	"os"
-	"github.com/jinzhu/gorm"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"strings"
 	"github.com/pkg/errors"
 	orm "github.com/adtechpotok/go-orm"
+	"github.com/adtechpotok/silog"
+	"database/sql"
 )
 
+//Config to writer
 type WriteConfig struct {
-	Db                *gorm.DB
-	Log               *logrus.Logger
-	FilePath          string
-	ServerId          int
-	TickTimeMs        time.Duration
-	MaxConnectTimeSec time.Duration
+	Db                sql.DB        //Db instance
+	Log               silog.Logger  // Log instance
+	FilePath          string        // Path to write file
+	ServerId          int           // Current server id
+	TickTimeMs        time.Duration //Tick for work
+	MaxConnectTimeSec time.Duration // Connect max time limit
 }
 
+// Write sql to DB or file
 type Writer struct {
 	config      WriteConfig
 	writeBuffer []orm.SchemaPotok
@@ -30,6 +32,7 @@ type Writer struct {
 	attemps     int
 }
 
+// Return new writer instance
 func New(config WriteConfig) *Writer {
 	m := &Writer{config: config}
 	m.mutex = &sync.RWMutex{}
@@ -40,22 +43,24 @@ func New(config WriteConfig) *Writer {
 
 const attempsLimit = 2
 
+// Append data to mysqlBuffer
 func (m *Writer) Append(data ...orm.SchemaPotok) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.mysqlBuffer = append(m.mysqlBuffer, data...)
 }
 
+// Start writer work
 func (m *Writer) work() {
 	c := time.Tick(m.config.TickTimeMs * time.Millisecond)
-	m.config.Db.DB().SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
+	m.config.Db.SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
 	for range c {
 		m.mysqlWrite()
 	}
 }
 
+// Write mysql to file or db
 func (m *Writer) mysqlWrite() {
-
 	//Смотрим остались ли данные с прошлой записи
 	if len(m.writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
 		m.mutex.Lock()
@@ -64,7 +69,7 @@ func (m *Writer) mysqlWrite() {
 		m.mutex.Unlock()
 	}
 
-	if m.config.Db.DB().Ping() == nil { //если коннект есть
+	if m.config.Db.Ping() == nil { //если коннект есть
 		err := m.readFiles() //записываем все файлы
 		if err != nil {
 			return
@@ -83,10 +88,10 @@ func (m *Writer) mysqlWrite() {
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
 
-	if m.config.Db.DB().Ping() == nil { //если конект есть
+	if m.config.Db.Ping() == nil { //если конект есть
 		i := 0
 		for _, val := range m.getQueryData() {
-			_, err := m.config.Db.DB().Exec(val)
+			_, err := m.config.Db.Exec(val)
 			if err != nil {
 				m.config.Log.Error("Error while writing in db", err)
 				m.attemps++
@@ -105,8 +110,8 @@ func (m *Writer) mysqlWrite() {
 
 }
 
+// Write sql to file
 func (m *Writer) fileWrite() error {
-
 	fileName := fmt.Sprintf("%s%d.sql", m.config.FilePath, time.Now().UnixNano())
 	file, err := os.Create(fileName)
 	defer file.Close()
@@ -119,6 +124,7 @@ func (m *Writer) fileWrite() error {
 	return nil
 }
 
+// Get sql from writeBuffer
 func (m *Writer) getQueryData() []string {
 	var res []string
 	for _, val := range m.writeBuffer {
@@ -128,6 +134,7 @@ func (m *Writer) getQueryData() []string {
 	return res
 }
 
+// Read files with sql
 func (m *Writer) readFiles() error {
 	files, err := ioutil.ReadDir("./" + m.config.FilePath)
 	if err != nil {
@@ -144,7 +151,7 @@ func (m *Writer) readFiles() error {
 		}
 		str := strings.Split(string(b), "\n")
 		i := 0
-		tx, _ := m.config.Db.DB().Begin()
+		tx, _ := m.config.Db.Begin()
 		for _, val := range str {
 			_, err := tx.Exec(val)
 			if err != nil {

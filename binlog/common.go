@@ -10,7 +10,6 @@ import (
 	"github.com/json-iterator/go"
 )
 
-
 type CommonHandler struct {
 }
 
