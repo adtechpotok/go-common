@@ -8,6 +8,7 @@ import (
 	"os"
 	"github.com/pkg/errors"
 	"fmt"
+	"io/ioutil"
 )
 
 var transactionAttemp = 0
@@ -30,17 +31,20 @@ func TestMain(m *testing.M) {
 
 func TestAppend(t *testing.T) {
 	shutdown := &testShutdownController{}
-	config := WriteConfig{&testSql{}, logrus.New(), testsqlDir, 1, 10, 100,shutdown}
+	logInstance := logrus.New()
+	logInstance.Out = ioutil.Discard
+	config := WriteConfig{&testSql{}, logInstance, testsqlDir, 1, 10, 100, shutdown}
 	m := New(config)
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 105; i++ {
 		m.Append(testModel{1, "1"})
 		time.Sleep(time.Millisecond)
 	}
-	go func(){
-		time.Sleep(90*time.Millisecond)
+	go func() {
+		time.Sleep(90 * time.Millisecond)
 		shutdown.turnOff = true
 	}()
-	time.Sleep(1 * time.Second)
+
+	time.Sleep(200 * time.Millisecond)
 }
 
 type testSql struct {
@@ -103,10 +107,8 @@ func (m *testTransaction) Commit() error {
 	}
 }
 
-type testShutdownController struct { turnOff bool}
+type testShutdownController struct{ turnOff bool }
 
 func (*testShutdownController) Done() {}
 
-func (m *testShutdownController) IsSwitchingOff() bool { return m.turnOff}
-
-
+func (m *testShutdownController) IsSwitchingOff() bool { return m.turnOff }
