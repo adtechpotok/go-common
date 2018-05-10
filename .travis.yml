@@ -4,7 +4,7 @@ go:
   - 1.10.x
 
 before_install:
-  - go get -v ./... && go get github.com/stretchr/testify/assert
+  - go get -v ./...
 
 script:
   - go test -cover -v ./...

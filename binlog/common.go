@@ -1,15 +1,14 @@
 package binlog
 
 import (
-	"github.com/siddontang/go-mysql/canal"
 	"fmt"
-	"time"
+	"github.com/json-iterator/go"
+	"github.com/siddontang/go-mysql/canal"
 	"github.com/siddontang/go-mysql/schema"
 	"reflect"
 	"strings"
-	"github.com/json-iterator/go"
+	"time"
 )
-
 
 type CommonHandler struct {
 }

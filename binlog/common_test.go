@@ -1,10 +1,10 @@
 package binlog
 
 import (
-	"testing"
-	"time"
 	"github.com/siddontang/go-mysql/canal"
 	"github.com/siddontang/go-mysql/schema"
+	"testing"
+	"time"
 )
 
 func TestCommonHandler_GetBinLogDataGetBinLogData_Insert(t *testing.T) {
