@@ -15,12 +15,13 @@ import (
 
 // Config to writer
 type WriteConfig struct {
-	Db                *sql.DB       // Db instance
-	Log               silog.Logger  // Log instance
-	FilePath          string        // Path to write file
-	ServerId          int           // Current server id
-	TickTimeMs        time.Duration // Tick for work
-	MaxConnectTimeSec time.Duration // Connect max time limit
+	Db                dbSqlInterface  // Db instance
+	Log               silog.Logger    // Log instance
+	FilePath          string          // Path to write file
+	ServerId          int             // Current server id
+	TickTimeMs        time.Duration   // Tick for work
+	MaxConnectTimeSec time.Duration   // Connect max time limit
+	ShutdownControl   ShutdownControl // Shutdown switcher
 }
 
 // Write sql to DB or file
@@ -77,6 +78,9 @@ func (m *Writer) mysqlWrite() {
 	}
 
 	if len(m.writeBuffer) == 0 { // если данных нет прекращаем работу
+		if m.config.ShutdownControl.IsSwitchingOff() {
+			m.config.ShutdownControl.Done()
+		}
 		return
 	}
 	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
@@ -145,6 +149,9 @@ func (m *Writer) readFiles() error {
 		if fileCounter > 100 {
 			return nil
 		}
+		if strings.Contains(f.Name(), "deleted"){
+			continue
+		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
 		if err != nil {
 			m.config.Log.Error(err)
@@ -189,4 +196,22 @@ func (m *Writer) readFiles() error {
 	}
 
 	return nil
+}
+
+type dbSqlInterface interface {
+	Begin() (transactionInterface, error)
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Ping() error
+	SetConnMaxLifetime(duration time.Duration)
+}
+
+type transactionInterface interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Rollback() error
+	Commit() error
+}
+
+type ShutdownControl interface {
+	Done()
+	IsSwitchingOff() bool
 }
