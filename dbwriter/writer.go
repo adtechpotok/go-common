@@ -35,6 +35,7 @@ type Writer struct {
 
 // Return new writer instance
 func New(config WriteConfig) *Writer {
+	config.FilePath = strings.TrimRight(config.FilePath,"/")+"/"
 	m := &Writer{config: config}
 	m.mutex = &sync.RWMutex{}
 	go m.work()
