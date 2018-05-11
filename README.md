@@ -2,10 +2,10 @@
 
 ## Общие либы гошных демонов
 
-##DB writer 
+## DB writer 
 It sends data to a database. If database is unavailable, after 2 tries it will write into files in configurated directory. When the connection is back, it will resend data to DB in same query orders.
 Data table must contains field_server_id, to support multiinstanced daemons
-##Example
+## Example
 ```$xslt
 	db,_  := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=True",
          		//Mysql.User,
