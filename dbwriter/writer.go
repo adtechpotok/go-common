@@ -63,29 +63,29 @@ func (m *Writer) work() {
 
 // Write mysql to file or db
 func (m *Writer) mysqlWrite() {
-	// Смотрим остались ли данные с прошлой записи
-	if len(m.writeBuffer) == 0 { // если данных нет, заполняем их из текущего буфера
+	// If there is data from last tick
+	if len(m.writeBuffer) == 0 { // if data is empty, take it from current buffer
 		m.mutex.Lock()
 		m.writeBuffer = m.mysqlBuffer
 		m.mysqlBuffer = make([]orm.SchemaPotok, 0)
 		m.mutex.Unlock()
 	}
 
-	if m.config.Db.Ping() == nil { // если коннект есть
-		err := m.readFiles() // записываем все файлы
+	if m.config.Db.Ping() == nil { // if connection is active
+		err := m.readFiles() // writing all data from files
 		if err != nil {
 			return
 		}
 	}
 
-	if len(m.writeBuffer) == 0 { // если данных нет прекращаем работу
+	if len(m.writeBuffer) == 0 { // if there is no data - return
 		if m.config.ShutdownControl.IsSwitchingOff() {
 			m.config.ShutdownControl.Done()
 		}
 		return
 	}
 	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
-	if m.attemps > attempsLimit { // используем попытки для понимания пишем мы в файл или в базу
+	if m.attemps > attempsLimit { // if we have made more attemps than limited
 		if err := m.fileWrite(); err != nil {
 			m.config.Log.Error(err, "Cannot write to file.")
 			return
@@ -93,7 +93,7 @@ func (m *Writer) mysqlWrite() {
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
 
-	if m.config.Db.Ping() == nil { // если конект есть
+	if m.config.Db.Ping() == nil { // if connect is active
 		i := 0
 		for _, val := range m.getQueryData() {
 			_, err := m.config.Db.Exec(val)
@@ -150,7 +150,7 @@ func (m *Writer) readFiles() error {
 		if fileCounter > 100 {
 			return nil
 		}
-		if strings.Contains(f.Name(), "deleted"){
+		if strings.Contains(f.Name(), "deleted"){ //if transaction failed file would be marked deleted, we should skip it
 			continue
 		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())

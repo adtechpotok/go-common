@@ -13,19 +13,19 @@ import (
 
 var transactionAttemp = 0
 
-const testsqlDir = "sql_test/"
+const testSqlDir = "sql_test/"
 
 func TestMain(m *testing.M) {
-	os.Mkdir(testsqlDir, 0777)
-	file, _ := os.Create(testsqlDir + "deleted1.sql")
+	os.Mkdir(testSqlDir, 0777)
+	file, _ := os.Create(testSqlDir + "deleted1.sql")
 	file.Close()
 	for i := 0; i < 200; i++ {
-		file, _ := os.Create(testsqlDir + "test" + fmt.Sprintf("%d", i) + ".sql")
+		file, _ := os.Create(fmt.Sprintf("%stest%d.sql",testSqlDir, i))
 		file.Close()
 	}
 	v := m.Run()
-	os.Remove(testsqlDir + "deleted1.sql")
-	os.Remove(testsqlDir)
+	os.Remove(testSqlDir + "deleted1.sql")
+	os.Remove(testSqlDir)
 	os.Exit(v)
 }
 
@@ -33,7 +33,7 @@ func TestAppend(t *testing.T) {
 	shutdown := &testShutdownController{}
 	logInstance := logrus.New()
 	logInstance.Out = ioutil.Discard
-	config := WriteConfig{&testSql{}, logInstance, testsqlDir, 1, 10, 100, shutdown}
+	config := WriteConfig{&testSql{}, logInstance, testSqlDir, 1, 10, 100, shutdown}
 	m := New(config)
 	for i := 0; i < 105; i++ {
 		m.Append(testModel{1, "1"})
