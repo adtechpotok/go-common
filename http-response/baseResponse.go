@@ -4,14 +4,19 @@ import (
 	"net/http"
 )
 
+const jsonType = "JSON"
+const jsonRawType = "JSONRaw"
+
+
 // Server response structure
-type BaseResponse struct {
+type Response struct {
+	renderType   string
 	Body   string `json:"message"`
 	status int
 }
 
 // CustomErrorState turn on CustomErrorState of the response
-func (res *BaseResponse) CustomErrorState(message string, code int) *BaseResponse {
+func (res *Response) CustomErrorState(message string, code int) Response {
 	res.setMessage(message)
 	res.setStatus(code)
 
@@ -19,7 +24,7 @@ func (res *BaseResponse) CustomErrorState(message string, code int) *BaseRespons
 }
 
 // ServerErrorState turn on ServerErrorState of the response
-func (res *BaseResponse) ServerErrorState() *BaseResponse {
+func (res *Response) ServerErrorState() *Response {
 	res.setMessage(http.StatusText(http.StatusInternalServerError))
 	res.setStatus(http.StatusInternalServerError)
 
@@ -27,7 +32,7 @@ func (res *BaseResponse) ServerErrorState() *BaseResponse {
 }
 
 // BadRequestErrorState turn on BadRequestErrorState of the response
-func (res *BaseResponse) BadRequestErrorState() *BaseResponse {
+func (res *Response) BadRequestErrorState() *Response {
 	res.setMessage(http.StatusText(http.StatusBadRequest))
 	res.setStatus(http.StatusBadRequest)
 
@@ -35,7 +40,7 @@ func (res *BaseResponse) BadRequestErrorState() *BaseResponse {
 }
 
 // ForbiddenErrorState turn on ForbiddenErrorState of the response
-func (res *BaseResponse) ForbiddenErrorState() *BaseResponse {
+func (res *Response) ForbiddenErrorState() *Response {
 	res.setMessage(http.StatusText(http.StatusForbidden))
 	res.setStatus(http.StatusForbidden)
 
@@ -43,7 +48,7 @@ func (res *BaseResponse) ForbiddenErrorState() *BaseResponse {
 }
 
 // TooManyRequestsErrorState turn on TooManyRequestsErrorState of the response
-func (res *BaseResponse) TooManyRequestsErrorState() *BaseResponse {
+func (res *Response) TooManyRequestsErrorState() *Response {
 	res.setMessage(http.StatusText(http.StatusTooManyRequests))
 	res.setStatus(http.StatusTooManyRequests)
 
@@ -51,7 +56,7 @@ func (res *BaseResponse) TooManyRequestsErrorState() *BaseResponse {
 }
 
 // NotFoundErrorState turn on NotFoundErrorState of the response
-func (res *BaseResponse) NotFoundErrorState() *BaseResponse {
+func (res *Response) NotFoundErrorState() *Response {
 	res.setMessage(http.StatusText(http.StatusNotFound))
 	res.setStatus(http.StatusNotFound)
 
@@ -59,14 +64,14 @@ func (res *BaseResponse) NotFoundErrorState() *BaseResponse {
 }
 
 // setMessage set response message
-func (res *BaseResponse) setMessage(message string) *BaseResponse {
+func (res *Response) setMessage(message string) *Response {
 	res.Body = message
 
 	return res
 }
 
-// setStatus set response status
-func (res *BaseResponse) setStatus(status int) *BaseResponse {
+// setStatus set response Status
+func (res *Response) setStatus(status int) *Response {
 	res.status = status
 
 	return res

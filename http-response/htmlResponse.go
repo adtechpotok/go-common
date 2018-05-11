@@ -7,7 +7,7 @@ import (
 
 // Struct to html response
 type HTMLResponse struct {
-	BaseResponse
+	Response
 }
 
 // RenderHtml convert the response to HTML and send it to client
