@@ -9,11 +9,12 @@ func TestParseTagSetting(t *testing.T) {
 	phoneSlice := make([]int, 2)
 	phoneSlice[0] = 1
 	phoneSlice[1] = 2
+	timeNow:=time.Now()
 	m := testStruct{
 		1,
 		phoneSlice,
 		1,
-		time.Now(),
+		timeNow,
 		true,
 		false,
 		"23",
@@ -23,9 +24,9 @@ func TestParseTagSetting(t *testing.T) {
 	}
 
 	stringSql := makeInsertQuery(m, 1)
-
-	if stringSql == "" {
-		t.Error("All bad")
+	expectedSql :="INSERT INTO `Voximplant`.`Test` (id,json,server_id,created,bool_true,bool_false,string,float,stringQuotes,server_id) VALUES (1,'[1,2]',1,'"+timeNow.Format("2006-01-02 15:04:05") +"',1,0,'23',0.000000,'23',1)"
+	if stringSql != expectedSql {
+		t.Errorf("Result '%s' does not match expected one '%s'",stringSql, expectedSql)
 	}
 }
 
