@@ -24,9 +24,9 @@ func TestParseTagSetting(t *testing.T) {
 	}
 
 	stringSql := makeInsertQuery(m, 1)
-	ecspectedSql :="INSERT INTO `Voximplant`.`Test` (id,json,server_id,created,bool_true,bool_false,string,float,stringQuotes,server_id) VALUES (1,'[1,2]',1,'"+timeNow.Format("2006-01-02 15:04:05") +"',1,0,'23',0.000000,'23',1)"
-	if stringSql != ecspectedSql {
-		t.Errorf("Result '%s' does not match expected one '%s'",stringSql,ecspectedSql)
+	expectedSal :="INSERT INTO `Voximplant`.`Test` (id,json,server_id,created,bool_true,bool_false,string,float,stringQuotes,server_id) VALUES (1,'[1,2]',1,'"+timeNow.Format("2006-01-02 15:04:05") +"',1,0,'23',0.000000,'23',1)"
+	if stringSql != expectedSal {
+		t.Errorf("Result '%s' does not match expected one '%s'",stringSql, expectedSal)
 	}
 }
 
