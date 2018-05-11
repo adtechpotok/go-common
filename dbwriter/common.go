@@ -102,7 +102,7 @@ func makeInsertQuery(v orm.SchemaPotok, serverId int) string {
 	if t, ok := v.(AfterSqlInterface); ok {
 		res += " " + t.AfterSql()
 	}
-	return strings.Trim(res," ")
+	return strings.TrimRight(res," ")
 }
 
 func clearQuotes(value string) string {
