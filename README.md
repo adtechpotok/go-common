@@ -37,7 +37,5 @@ writer.Append(data)
 
 
 ## HTTP Response 
-This package allows creating server response. We can choose from HTML, JsonRaw (if we need to set body nonstring type) or JSON (if the body is a string) response types.
-
-
+This package allows creating server response. We can choose from HTML, Json (if we need to set body nonstring type) or JSONMessage (if the body is a string) response types.
 

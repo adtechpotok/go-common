@@ -17,49 +17,54 @@ type HTMLResponse struct {
 }
 
 // RenderHtml convert the response to HTML and send it to client
-func (res *HTMLResponse) Render(w http.ResponseWriter) {
-	w.WriteHeader(res.status)
-	w.Write([]byte(fmt.Sprintf("%s %d", res.Body, res.status)))
+func (m *HTMLResponse) Render(w http.ResponseWriter) {
+	w.WriteHeader(m.status)
+	w.Write([]byte(fmt.Sprintf("%s %d", m.Body, m.status)))
 }
 
 // setStatus set response Status
-func (res *HTMLResponse) setStatus(status int) Response {
-	res.status = status
-	return res
+func (m *HTMLResponse) setStatus(status int) Response {
+	m.status = status
+	return m
 }
 
 // setMessage set response message
-func (res *HTMLResponse) setMessage(message interface{}) Response {
-	res.Body = message.(string)
-	return res
+func (m *HTMLResponse) setMessage(message interface{}) Response {
+	m.Body = message.(string)
+	return m
 }
 
-// CustomState turn on CustomState of the response
-func (res *HTMLResponse) CustomState(message interface{}, code int) Response {
-	return CustomState(res, message, code)
+// CustomResult turn on custom state of the response
+func (m *HTMLResponse) CustomResult(message interface{}, code int) Response {
+	return custom(m, message, code)
 }
 
-// ServerErrorState turn on ServerErrorState of the response
-func (res *HTMLResponse) ServerErrorState() Response {
-	return ServerErrorState(res)
+// ServerError turn on ServerError state of the response
+func (m *HTMLResponse) ServerError() Response {
+	return serverError(m)
 }
 
-// BadRequestErrorState turn on BadRequestErrorState of the response
-func (res *HTMLResponse) BadRequestErrorState() Response {
-	return BadRequestErrorState(res)
+// BadRequestError turn on BadRequestError state of the response
+func (m *HTMLResponse) BadRequestError() Response {
+	return badRequestError(m)
 }
 
-// ForbiddenErrorState turn on ForbiddenErrorState of the response
-func (res *HTMLResponse) ForbiddenErrorState() Response {
-	return ForbiddenErrorState(res)
+// ForbiddenError turn on ForbiddenError state of the response
+func (m *HTMLResponse) ForbiddenError() Response {
+	return forbiddenError(m)
 }
 
-// TooManyRequestsErrorState turn on TooManyRequestsErrorState of the response
-func (res *HTMLResponse) TooManyRequestsErrorState() Response {
-	return TooManyRequestsErrorState(res)
+// TooManyRequestsError turn on TooManyRequestsError state of the response
+func (m *HTMLResponse) TooManyRequestsError() Response {
+	return tooManyRequestsError(m)
 }
 
-// NotFoundErrorState turn on NotFoundErrorState of the response
-func (res *HTMLResponse) NotFoundErrorState() Response {
-	return NotFoundErrorState(res)
+// NotFoundError turn on NotFoundError state of the response
+func (m *HTMLResponse) NotFoundError() Response {
+	return notFoundError(m)
+}
+
+// SuccessResult turn on success state of the response
+func (m *HTMLResponse) SuccessResult(body interface{}) Response {
+	return success(m, body)
 }

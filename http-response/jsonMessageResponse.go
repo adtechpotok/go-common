@@ -5,23 +5,20 @@ import (
 	`github.com/json-iterator/go`
 )
 
-// JSON return empty JSONResponse struct
-func JSON() *JSONResponse {
-	return &JSONResponse{}
+// JSONMessage return empty JSONMessageResponse struct
+func JSONMessage() *JSONMessageResponse {
+	return &JSONMessageResponse{}
 }
 
-// JSON response with interface body
-type JSONResponse struct {
-	body   interface{}
+// JSON response with string body
+type JSONMessageResponse struct {
+	Body   string `json:"message"`
 	status int
 }
 
-// Render render struct to response
-func (m *JSONResponse) Render(w http.ResponseWriter) {
-	js, err := jsoniter.Marshal(m.body)
-	if err != nil {
-		panic(Error{err, m})
-	}
+// RenderJson convert the response to JSONMessage and send it to client
+func (m *JSONMessageResponse) Render(w http.ResponseWriter) {
+	js, _ := jsoniter.Marshal(m)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(m.status)
@@ -29,48 +26,48 @@ func (m *JSONResponse) Render(w http.ResponseWriter) {
 }
 
 // setStatus set response Status
-func (m *JSONResponse) setStatus(status int) Response {
+func (m *JSONMessageResponse) setStatus(status int) Response {
 	m.status = status
 	return m
 }
 
 // setMessage set response message
-func (m *JSONResponse) setMessage(body interface{}) Response {
-	m.body = body
+func (m *JSONMessageResponse) setMessage(message interface{}) Response {
+	m.Body = message.(string)
 	return m
 }
 
 // CustomResult turn on custom state of the response
-func (m *JSONResponse) CustomResult(message interface{}, code int) Response {
+func (m *JSONMessageResponse) CustomResult(message interface{}, code int) Response {
 	return custom(m, message, code)
 }
 
 // ServerError turn on ServerError state of the response
-func (m *JSONResponse) ServerError() Response {
+func (m *JSONMessageResponse) ServerError() Response {
 	return serverError(m)
 }
 
 // BadRequestError turn on BadRequestError state of the response
-func (m *JSONResponse) BadRequestError() Response {
+func (m *JSONMessageResponse) BadRequestError() Response {
 	return badRequestError(m)
 }
 
 // ForbiddenError turn on ForbiddenError state of the response
-func (m *JSONResponse) ForbiddenError() Response {
+func (m *JSONMessageResponse) ForbiddenError() Response {
 	return forbiddenError(m)
 }
 
 // TooManyRequestsError turn on TooManyRequestsError state of the response
-func (m *JSONResponse) TooManyRequestsError() Response {
+func (m *JSONMessageResponse) TooManyRequestsError() Response {
 	return tooManyRequestsError(m)
 }
 
 // NotFoundError turn on NotFoundError state of the response
-func (m *JSONResponse) NotFoundError() Response {
+func (m *JSONMessageResponse) NotFoundError() Response {
 	return notFoundError(m)
 }
 
 // SuccessResult turn on success state of the response
-func (m *JSONResponse) SuccessResult(body interface{}) Response {
+func (m *JSONMessageResponse) SuccessResult(body interface{}) Response {
 	return success(m, body)
 }
