@@ -8,117 +8,117 @@ import (
 
 func TestErrorStates(t *testing.T) {
 	html := HTML()
+	jsonMessage := JSONMessage()
 	json := JSON()
-	jsonRaw := JSONRaw()
 
-	html.ServerErrorState()
-	json.ServerErrorState()
-	jsonRaw.ServerErrorState()
+	html.ServerError()
+	jsonMessage.ServerError()
+	json.ServerError()
 
 	if html.Body != http.StatusText(http.StatusInternalServerError) && html.status != http.StatusInternalServerError {
 		t.Error("ServerErorState html error")
 	}
 
-	if json.Body != http.StatusText(http.StatusInternalServerError) && json.status != http.StatusInternalServerError {
-		t.Error("ServerErorState json error")
+	if jsonMessage.Body != http.StatusText(http.StatusInternalServerError) && jsonMessage.status != http.StatusInternalServerError {
+		t.Error("ServerErorState jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != http.StatusText(http.StatusInternalServerError) && jsonRaw.status != http.StatusInternalServerError {
-		t.Error("ServerErorState jsonRaw error")
+	if json.body.(string) != http.StatusText(http.StatusInternalServerError) && json.status != http.StatusInternalServerError {
+		t.Error("ServerErorState jsonMessage error")
 	}
 
-	html.BadRequestErrorState()
-	json.BadRequestErrorState()
-	jsonRaw.BadRequestErrorState()
+	html.BadRequestError()
+	jsonMessage.BadRequestError()
+	json.BadRequestError()
 
 	if html.Body != http.StatusText(http.StatusBadRequest) && html.status != http.StatusBadRequest {
-		t.Error("BadRequestErrorState html error")
+		t.Error("BadRequestError html error")
 	}
 
-	if json.Body != http.StatusText(http.StatusBadRequest) && json.status != http.StatusBadRequest {
-		t.Error("BadRequestErrorState json error")
+	if jsonMessage.Body != http.StatusText(http.StatusBadRequest) && jsonMessage.status != http.StatusBadRequest {
+		t.Error("BadRequestError jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != http.StatusText(http.StatusBadRequest) && jsonRaw.status != http.StatusBadRequest {
-		t.Error("BadRequestErrorState jsonRaw error")
+	if json.body.(string) != http.StatusText(http.StatusBadRequest) && json.status != http.StatusBadRequest {
+		t.Error("BadRequestError jsonMessage error")
 	}
 
-	html.ForbiddenErrorState()
-	json.ForbiddenErrorState()
-	jsonRaw.ForbiddenErrorState()
+	html.ForbiddenError()
+	jsonMessage.ForbiddenError()
+	json.ForbiddenError()
 
 	if html.Body != http.StatusText(http.StatusForbidden) && html.status != http.StatusForbidden {
-		t.Error("ForbiddenErrorState html error")
+		t.Error("ForbiddenError html error")
 	}
 
-	if json.Body != http.StatusText(http.StatusForbidden) && json.status != http.StatusForbidden {
-		t.Error("ForbiddenErrorState json error")
+	if jsonMessage.Body != http.StatusText(http.StatusForbidden) && jsonMessage.status != http.StatusForbidden {
+		t.Error("ForbiddenError jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != http.StatusText(http.StatusForbidden) && jsonRaw.status != http.StatusForbidden {
-		t.Error("ForbiddenErrorState jsonRaw error")
+	if json.body.(string) != http.StatusText(http.StatusForbidden) && json.status != http.StatusForbidden {
+		t.Error("ForbiddenError jsonMessage error")
 	}
 
-	html.TooManyRequestsErrorState()
-	json.TooManyRequestsErrorState()
-	jsonRaw.TooManyRequestsErrorState()
+	html.TooManyRequestsError()
+	jsonMessage.TooManyRequestsError()
+	json.TooManyRequestsError()
 
 	if html.Body != http.StatusText(http.StatusTooManyRequests) && html.status != http.StatusTooManyRequests {
-		t.Error("TooManyRequestsErrorState html error")
+		t.Error("TooManyRequestsError html error")
 	}
 
-	if json.Body != http.StatusText(http.StatusTooManyRequests) && json.status != http.StatusTooManyRequests {
-		t.Error("TooManyRequestsErrorState json error")
+	if jsonMessage.Body != http.StatusText(http.StatusTooManyRequests) && jsonMessage.status != http.StatusTooManyRequests {
+		t.Error("TooManyRequestsError jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != http.StatusText(http.StatusTooManyRequests) && jsonRaw.status != http.StatusTooManyRequests {
-		t.Error("TooManyRequestsErrorState jsonRaw error")
+	if json.body.(string) != http.StatusText(http.StatusTooManyRequests) && json.status != http.StatusTooManyRequests {
+		t.Error("TooManyRequestsError jsonMessage error")
 	}
 
-	html.NotFoundErrorState()
-	json.NotFoundErrorState()
-	jsonRaw.NotFoundErrorState()
+	html.NotFoundError()
+	jsonMessage.NotFoundError()
+	json.NotFoundError()
 
 	if html.Body != http.StatusText(http.StatusNotFound) && html.status != http.StatusNotFound {
-		t.Error("NotFoundErrorState html error")
+		t.Error("NotFoundError html error")
 	}
 
-	if json.Body != http.StatusText(http.StatusNotFound) && json.status != http.StatusNotFound {
-		t.Error("NotFoundErrorState json error")
+	if jsonMessage.Body != http.StatusText(http.StatusNotFound) && jsonMessage.status != http.StatusNotFound {
+		t.Error("NotFoundError jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != http.StatusText(http.StatusNotFound) && jsonRaw.status != http.StatusNotFound {
-		t.Error("NotFoundErrorState jsonRaw error")
+	if json.body.(string) != http.StatusText(http.StatusNotFound) && json.status != http.StatusNotFound {
+		t.Error("NotFoundError jsonMessage error")
 	}
 }
 
 func TestCustomErrorState(t *testing.T) {
 	html := HTML()
+	jsonMessage := JSONMessage()
 	json := JSON()
-	jsonRaw := JSONRaw()
 
 	message := "Test"
 	status := 100
-	html.CustomState(message, status)
-	json.CustomState(message, status)
-	jsonRaw.CustomState(message, status)
+	html.Custom(message, status)
+	jsonMessage.Custom(message, status)
+	json.Custom(message, status)
 
 	if html.Body != message && html.status != status {
 		t.Error("ServerErorState html error")
 	}
 
-	if json.Body != message && json.status != status {
-		t.Error("ServerErorState json error")
+	if jsonMessage.Body != message && jsonMessage.status != status {
+		t.Error("ServerErorState jsonMessage error")
 	}
 
-	if jsonRaw.body.(string) != message && jsonRaw.status != status {
-		t.Error("ServerErorState jsonRaw error")
+	if json.body.(string) != message && json.status != status {
+		t.Error("ServerErorState jsonMessage error")
 	}
 }
 
 func TestHTMLResponse_Render(t *testing.T) {
 	w := httptest.ResponseRecorder{}
-	HTML().NotFoundErrorState().Render(&w)
+	HTML().NotFoundError().Render(&w)
 	if w.Code != http.StatusNotFound {
 		t.Error("Html render problem")
 	}
@@ -126,7 +126,7 @@ func TestHTMLResponse_Render(t *testing.T) {
 
 func TestJSONResponse_Render(t *testing.T) {
 	w := httptest.ResponseRecorder{}
-	JSON().NotFoundErrorState().Render(&w)
+	JSONMessage().NotFoundError().Render(&w)
 	if w.Code != http.StatusNotFound {
 		t.Error("Json render problem")
 	}
@@ -134,27 +134,51 @@ func TestJSONResponse_Render(t *testing.T) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			t.Errorf("Trash value to json work. JSON")
+			t.Errorf("Trash value to json work. JSONMessage")
 		}
 	}()
 	value := make(chan int)
-	JSON().CustomState(value, 100).Render(&w)
+	JSONMessage().Custom(value, 100).Render(&w)
 
 }
 
 func TestJSONRawResponse_Render(t *testing.T) {
 	w := httptest.ResponseRecorder{}
-	JSONRaw().NotFoundErrorState().Render(&w)
+	JSON().NotFoundError().Render(&w)
 	if w.Code != http.StatusNotFound {
-		t.Error("JSONRaw render problem")
+		t.Error("JSON render problem")
 	}
 
 	defer func() {
 		r := recover()
 		if r == nil {
-			t.Errorf("Trash value to json work. JsonRaw")
+			t.Errorf("Trash value to json work. json")
 		}
 	}()
 	value := make(chan int)
-	JSONRaw().CustomState(value, 100).Render(&w)
+	JSON().Custom(value, 100).Render(&w)
+}
+
+func TestSuccessResponse(t *testing.T) {
+	html := HTML()
+	jsonMessage := JSONMessage()
+	json := JSON()
+
+	message := "1"
+
+	html.Success(message)
+	jsonMessage.Success(message)
+	json.Success(message)
+
+	if html.Body != message && html.status != http.StatusOK {
+		t.Error("Success html error")
+	}
+
+	if jsonMessage.Body != message && jsonMessage.status != http.StatusOK {
+		t.Error("Success jsonMessage error")
+	}
+
+	if json.body.(string) != message && json.status != http.StatusOK {
+		t.Error("Success jsonMessage error")
+	}
 }
