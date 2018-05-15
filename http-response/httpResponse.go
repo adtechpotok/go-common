@@ -12,8 +12,8 @@ type Error struct {
 // Regular response
 type Response interface {
 	Render(w http.ResponseWriter)
-	Custom(message interface{}, code int) Response
-	Success(body interface{}) Response
+	CustomResult(message interface{}, code int) Response
+	SuccessResult(body interface{}) Response
 	ServerError() Response
 	BadRequestError() Response
 	ForbiddenError() Response

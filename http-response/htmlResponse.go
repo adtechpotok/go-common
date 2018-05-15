@@ -34,8 +34,8 @@ func (m *HTMLResponse) setMessage(message interface{}) Response {
 	return m
 }
 
-// Custom turn on custom state of the response
-func (m *HTMLResponse) Custom(message interface{}, code int) Response {
+// CustomResult turn on custom state of the response
+func (m *HTMLResponse) CustomResult(message interface{}, code int) Response {
 	return custom(m, message, code)
 }
 
@@ -64,7 +64,7 @@ func (m *HTMLResponse) NotFoundError() Response {
 	return notFoundError(m)
 }
 
-// Success turn on success state of the response
-func (m *HTMLResponse) Success(body interface{}) Response {
+// SuccessResult turn on success state of the response
+func (m *HTMLResponse) SuccessResult(body interface{}) Response {
 	return success(m, body)
 }

@@ -18,10 +18,7 @@ type JSONMessageResponse struct {
 
 // RenderJson convert the response to JSONMessage and send it to client
 func (m *JSONMessageResponse) Render(w http.ResponseWriter) {
-	js, err := jsoniter.Marshal(m)
-	if err != nil {
-		panic(Error{err, m})
-	}
+	js, _ := jsoniter.Marshal(m)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(m.status)
@@ -40,8 +37,8 @@ func (m *JSONMessageResponse) setMessage(message interface{}) Response {
 	return m
 }
 
-// Custom turn on custom state of the response
-func (m *JSONMessageResponse) Custom(message interface{}, code int) Response {
+// CustomResult turn on custom state of the response
+func (m *JSONMessageResponse) CustomResult(message interface{}, code int) Response {
 	return custom(m, message, code)
 }
 
@@ -70,7 +67,7 @@ func (m *JSONMessageResponse) NotFoundError() Response {
 	return notFoundError(m)
 }
 
-// Success turn on success state of the response
-func (m *JSONMessageResponse) Success(body interface{}) Response {
+// SuccessResult turn on success state of the response
+func (m *JSONMessageResponse) SuccessResult(body interface{}) Response {
 	return success(m, body)
 }

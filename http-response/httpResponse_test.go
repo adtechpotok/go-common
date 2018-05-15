@@ -99,9 +99,9 @@ func TestCustomErrorState(t *testing.T) {
 
 	message := "Test"
 	status := 100
-	html.Custom(message, status)
-	jsonMessage.Custom(message, status)
-	json.Custom(message, status)
+	html.CustomResult(message, status)
+	jsonMessage.CustomResult(message, status)
+	json.CustomResult(message, status)
 
 	if html.Body != message && html.status != status {
 		t.Error("ServerErorState html error")
@@ -134,11 +134,11 @@ func TestJSONResponse_Render(t *testing.T) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			t.Errorf("Trash value to json work. JSONMessage")
+			t.Errorf("Trash value to json worked. JSONMessage")
 		}
 	}()
 	value := make(chan int)
-	JSONMessage().Custom(value, 100).Render(&w)
+	JSONMessage().CustomResult(value, 100).Render(&w)
 
 }
 
@@ -152,11 +152,11 @@ func TestJSONRawResponse_Render(t *testing.T) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			t.Errorf("Trash value to json work. json")
+			t.Errorf("Trash value to json worked. json")
 		}
 	}()
 	value := make(chan int)
-	JSON().Custom(value, 100).Render(&w)
+	JSON().CustomResult(value, 100).Render(&w)
 }
 
 func TestSuccessResponse(t *testing.T) {
@@ -166,19 +166,19 @@ func TestSuccessResponse(t *testing.T) {
 
 	message := "1"
 
-	html.Success(message)
-	jsonMessage.Success(message)
-	json.Success(message)
+	html.SuccessResult(message)
+	jsonMessage.SuccessResult(message)
+	json.SuccessResult(message)
 
 	if html.Body != message && html.status != http.StatusOK {
-		t.Error("Success html error")
+		t.Error("SuccessResult html error")
 	}
 
 	if jsonMessage.Body != message && jsonMessage.status != http.StatusOK {
-		t.Error("Success jsonMessage error")
+		t.Error("SuccessResult jsonMessage error")
 	}
 
 	if json.body.(string) != message && json.status != http.StatusOK {
-		t.Error("Success jsonMessage error")
+		t.Error("SuccessResult jsonMessage error")
 	}
 }
