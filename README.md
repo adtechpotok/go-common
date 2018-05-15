@@ -34,3 +34,6 @@ writer.Append(data)
 *do not create additional writer instance without need
 
 *those queries are not injections save
+
+## HTTP Response 
+This package allows creating server response. We can choose from HTML, Json (if we need to set body nonstring type) or JSONMessage (if the body is a string) response types.
