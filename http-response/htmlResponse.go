@@ -36,35 +36,35 @@ func (m *HTMLResponse) setMessage(message interface{}) Response {
 
 // CustomResult turn on custom state of the response
 func (m *HTMLResponse) CustomResult(message interface{}, code int) Response {
-	return custom(m, message, code)
+	return setCustomResult(m, message, code)
 }
 
 // ServerError turn on ServerError state of the response
 func (m *HTMLResponse) ServerError() Response {
-	return serverError(m)
+	return setServerError(m)
 }
 
 // BadRequestError turn on BadRequestError state of the response
 func (m *HTMLResponse) BadRequestError() Response {
-	return badRequestError(m)
+	return setBadRequestError(m)
 }
 
 // ForbiddenError turn on ForbiddenError state of the response
 func (m *HTMLResponse) ForbiddenError() Response {
-	return forbiddenError(m)
+	return setForbiddenError(m)
 }
 
 // TooManyRequestsError turn on TooManyRequestsError state of the response
 func (m *HTMLResponse) TooManyRequestsError() Response {
-	return tooManyRequestsError(m)
+	return setTooManyRequestsError(m)
 }
 
 // NotFoundError turn on NotFoundError state of the response
 func (m *HTMLResponse) NotFoundError() Response {
-	return notFoundError(m)
+	return setNotFoundError(m)
 }
 
 // SuccessResult turn on success state of the response
 func (m *HTMLResponse) SuccessResult(body interface{}) Response {
-	return success(m, body)
+	return setSuccessResult(m, body)
 }
