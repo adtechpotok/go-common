@@ -200,16 +200,10 @@ func (m *Writer) readFiles() error {
 }
 
 type dbSqlInterface interface {
-	Begin() (transactionInterface, error)
+	Begin() (*sql.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Ping() error
 	SetConnMaxLifetime(duration time.Duration)
-}
-
-type transactionInterface interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Rollback() error
-	Commit() error
 }
 
 type ShutdownControl interface {
