@@ -23,56 +23,56 @@ type Response interface {
 	setStatus(status int) Response
 }
 
-// custom turn on custom state of the response
-func custom(res Response, message interface{}, code int) Response {
+// setCustomResult turn on setCustomResult state of the response
+func setCustomResult(res Response, message interface{}, code int) Response {
 	res.setMessage(message)
 	res.setStatus(code)
 
 	return res
 }
 
-// success turn on success state of the response
-func success(res Response, message interface{}) Response {
+// setSuccessResult turn on setSuccessResult state of the response
+func setSuccessResult(res Response, message interface{}) Response {
 	res.setMessage(message)
 	res.setStatus(http.StatusOK)
 
 	return res
 }
 
-// serverError turn on serverError state of the response
-func serverError(res Response) Response {
+// setServerError turn on setServerError state of the response
+func setServerError(res Response) Response {
 	res.setMessage(http.StatusText(http.StatusInternalServerError))
 	res.setStatus(http.StatusInternalServerError)
 
 	return res
 }
 
-// badRequestError turn on badRequestError state of the response
-func badRequestError(res Response) Response {
+// setBadRequestError turn on setBadRequestError state of the response
+func setBadRequestError(res Response) Response {
 	res.setMessage(http.StatusText(http.StatusBadRequest))
 	res.setStatus(http.StatusBadRequest)
 
 	return res
 }
 
-// forbiddenError turn on forbiddenError state of the response
-func forbiddenError(res Response) Response {
+// setForbiddenError turn on setForbiddenError state of the response
+func setForbiddenError(res Response) Response {
 	res.setMessage(http.StatusText(http.StatusForbidden))
 	res.setStatus(http.StatusForbidden)
 
 	return res
 }
 
-// tooManyRequestsError turn on tooManyRequestsError state of the response
-func tooManyRequestsError(res Response) Response {
+// setTooManyRequestsError turn on setTooManyRequestsError state of the response
+func setTooManyRequestsError(res Response) Response {
 	res.setMessage(http.StatusText(http.StatusTooManyRequests))
 	res.setStatus(http.StatusTooManyRequests)
 
 	return res
 }
 
-// notFoundError turn on notFoundError state of the response
-func notFoundError(res Response) Response {
+// setNotFoundError turn on setNotFoundError state of the response
+func setNotFoundError(res Response) Response {
 	res.setMessage(http.StatusText(http.StatusNotFound))
 	res.setStatus(http.StatusNotFound)
 

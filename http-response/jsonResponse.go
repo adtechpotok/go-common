@@ -42,35 +42,35 @@ func (m *JSONResponse) setMessage(body interface{}) Response {
 
 // CustomResult turn on custom state of the response
 func (m *JSONResponse) CustomResult(message interface{}, code int) Response {
-	return custom(m, message, code)
+	return setCustomResult(m, message, code)
 }
 
 // ServerError turn on ServerError state of the response
 func (m *JSONResponse) ServerError() Response {
-	return serverError(m)
+	return setServerError(m)
 }
 
 // BadRequestError turn on BadRequestError state of the response
 func (m *JSONResponse) BadRequestError() Response {
-	return badRequestError(m)
+	return setBadRequestError(m)
 }
 
 // ForbiddenError turn on ForbiddenError state of the response
 func (m *JSONResponse) ForbiddenError() Response {
-	return forbiddenError(m)
+	return setForbiddenError(m)
 }
 
 // TooManyRequestsError turn on TooManyRequestsError state of the response
 func (m *JSONResponse) TooManyRequestsError() Response {
-	return tooManyRequestsError(m)
+	return setTooManyRequestsError(m)
 }
 
 // NotFoundError turn on NotFoundError state of the response
 func (m *JSONResponse) NotFoundError() Response {
-	return notFoundError(m)
+	return setNotFoundError(m)
 }
 
 // SuccessResult turn on success state of the response
 func (m *JSONResponse) SuccessResult(body interface{}) Response {
-	return success(m, body)
+	return setSuccessResult(m, body)
 }
