@@ -35,7 +35,7 @@ type Writer struct {
 
 // Return new writer instance
 func New(config WriteConfig) *Writer {
-	config.FilePath = strings.TrimRight(config.FilePath,"/")+"/"
+	config.FilePath = strings.TrimRight(config.FilePath, "/") + "/"
 	m := &Writer{config: config}
 	m.mutex = &sync.RWMutex{}
 	go m.work()
@@ -57,12 +57,15 @@ func (m *Writer) work() {
 	c := time.Tick(m.config.TickTimeMs * time.Millisecond)
 	m.config.Db.SetConnMaxLifetime(time.Second * m.config.MaxConnectTimeSec)
 	for range c {
-		m.mysqlWrite()
+		done := m.mysqlWrite()
+		if done {
+			return
+		}
 	}
 }
 
 // Write mysql to file or db
-func (m *Writer) mysqlWrite() {
+func (m *Writer) mysqlWrite() bool {
 	// If there is data from last tick
 	if len(m.writeBuffer) == 0 { // if data is empty, take it from current buffer
 		m.mutex.Lock()
@@ -74,21 +77,22 @@ func (m *Writer) mysqlWrite() {
 	if m.config.Db.Ping() == nil { // if connection is active
 		err := m.readFiles() // writing all data from files
 		if err != nil {
-			return
+			return false
 		}
 	}
 
 	if len(m.writeBuffer) == 0 { // if there is no data - return
 		if m.config.ShutdownControl.IsSwitchingOff() {
 			m.config.ShutdownControl.Done()
+			return true
 		}
-		return
+		return false
 	}
-	m.config.Log.Infof("Got %d element for mysql write", len(m.writeBuffer))
+	m.config.Log.Debugf("Got %d element for mysql write", len(m.writeBuffer))
 	if m.attemps > attempsLimit { // if we have made more attemps than limited
 		if err := m.fileWrite(); err != nil {
 			m.config.Log.Error(err, "Cannot write to file.")
-			return
+			return false
 		}
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 	}
@@ -101,18 +105,18 @@ func (m *Writer) mysqlWrite() {
 				m.config.Log.Error("Error while writing in db", err)
 				m.attemps++
 				m.writeBuffer = m.writeBuffer[i:]
-				return
+				return false
 			}
 			i++
 		}
 
-		m.config.Log.Infof("Inserted %d rows", i)
+		m.config.Log.Debugf("Inserted %d rows", i)
 		m.writeBuffer = make([]orm.SchemaPotok, 0)
 		m.attemps = 0
 	} else {
 		m.attemps++
 	}
-
+	return false
 }
 
 // Write sql to file
@@ -150,7 +154,7 @@ func (m *Writer) readFiles() error {
 		if fileCounter > 100 {
 			return nil
 		}
-		if strings.Contains(f.Name(), "deleted"){ //if transaction failed file would be marked deleted, we should skip it
+		if strings.Contains(f.Name(), "deleted") { //if transaction failed file would be marked deleted, we should skip it
 			continue
 		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
@@ -171,7 +175,7 @@ func (m *Writer) readFiles() error {
 			i++
 		}
 
-		m.config.Log.Infof("FROM FILE inserted %d rows", i)
+		m.config.Log.Debugf("FROM FILE inserted %d rows", i)
 
 		deletedFileName := m.config.FilePath + "deleted" + f.Name()
 		err = os.Rename(m.config.FilePath+f.Name(), deletedFileName)
@@ -200,16 +204,10 @@ func (m *Writer) readFiles() error {
 }
 
 type dbSqlInterface interface {
-	Begin() (transactionInterface, error)
+	Begin() (*sql.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Ping() error
 	SetConnMaxLifetime(duration time.Duration)
-}
-
-type transactionInterface interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Rollback() error
-	Commit() error
 }
 
 type ShutdownControl interface {
