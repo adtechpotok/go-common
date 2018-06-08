@@ -2,16 +2,14 @@ package dbwriter
 
 import (
 	"testing"
-	"database/sql"
 	"time"
 	"github.com/sirupsen/logrus"
 	"os"
-	"github.com/pkg/errors"
 	"fmt"
 	"io/ioutil"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"github.com/pkg/errors"
 )
-
-var transactionAttemp = 0
 
 const testSqlDir = "sql_test/"
 
@@ -20,7 +18,7 @@ func TestMain(m *testing.M) {
 	file, _ := os.Create(testSqlDir + "deleted1.sql")
 	file.Close()
 	for i := 0; i < 200; i++ {
-		file, _ := os.Create(fmt.Sprintf("%stest%d.sql",testSqlDir, i))
+		file, _ := os.Create(fmt.Sprintf("%stest%d.sql", testSqlDir, i))
 		file.Close()
 	}
 	v := m.Run()
@@ -30,15 +28,40 @@ func TestMain(m *testing.M) {
 }
 
 func TestAppend(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
 	shutdown := &testShutdownController{}
 	logInstance := logrus.New()
 	logInstance.Out = ioutil.Discard
-	config := WriteConfig{&testSql{}, logInstance, testSqlDir, 1, 10, 100, shutdown}
+	/** Первая запись в файл всегда ошибочка */
+	mock.ExpectBegin()
+	mock.ExpectExec("").WillReturnError(errors.New("test"))
+	mock.ExpectRollback()
+
+	/** Для каждого нашего запроса, содаем успешный  */
+	for i := 0; i < 200; i++ {
+		sucessTransaction(mock)
+	}
+
+	config := WriteConfig{db, logInstance, testSqlDir, 1, 10, 100, shutdown}
 	m := New(config)
 	for i := 0; i < 105; i++ {
+		/* записываем успешно все данные */
+		mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(1, 1))
 		m.Append(testModel{1, "1"})
 		time.Sleep(time.Millisecond)
 	}
+
+	/* проверяем кейс безуспешной записи, которая удается при восстанавление данных из файла*/
+	m.Append(testModel{1, "1"})
+	mock.ExpectExec("").WillReturnError(errors.New("1"))
+	mock.ExpectExec("").WillReturnError(errors.New("1"))
+
+	sucessTransaction(mock)
+
 	go func() {
 		time.Sleep(90 * time.Millisecond)
 		shutdown.turnOff = true
@@ -46,33 +69,6 @@ func TestAppend(t *testing.T) {
 
 	time.Sleep(200 * time.Millisecond)
 }
-
-type testSql struct {
-	pingAttempts int
-	execAttempts int
-}
-
-func (m *testSql) Begin() (transactionInterface, error) { return &testTransaction{}, nil }
-
-func (m *testSql) Exec(query string, args ...interface{}) (sql.Result, error) {
-	m.execAttempts++
-	if m.execAttempts > 1 {
-		return nil, nil
-	} else {
-		return nil, errors.New("Transaction error")
-	}
-}
-
-func (m *testSql) Ping() error {
-	m.pingAttempts++
-	if m.pingAttempts > 20 {
-		return nil
-	} else {
-		return errors.New("db error")
-	}
-}
-
-func (m *testSql) SetConnMaxLifetime(duration time.Duration) {}
 
 type testModel struct {
 	Id     int    `gorm:"column:id"`
@@ -83,32 +79,13 @@ func (testModel) SchemaName() string { return "test" }
 
 func (testModel) TableName() string { return "test" }
 
-type testTransaction struct{}
-
-func (*testTransaction) Exec(query string, args ...interface{}) (sql.Result, error) {
-	transactionAttemp++
-	if transactionAttemp > 2 {
-		return nil, nil
-	} else {
-		return nil, errors.New("Transaction error")
-	}
-}
-
-func (*testTransaction) Rollback() error {
-	return nil
-}
-
-func (m *testTransaction) Commit() error {
-	transactionAttemp++
-	if transactionAttemp > 1 {
-		return nil
-	} else {
-		return errors.New("Transaction error")
-	}
-}
-
 type testShutdownController struct{ turnOff bool }
 
-func (*testShutdownController) Done() {}
-
+func (*testShutdownController) Done()                  {}
 func (m *testShutdownController) IsSwitchingOff() bool { return m.turnOff }
+
+func sucessTransaction(mock sqlmock.Sqlmock) {
+	mock.ExpectBegin()
+	mock.ExpectExec("").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+}

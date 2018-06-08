@@ -15,7 +15,7 @@ import (
 
 // Config to writer
 type WriteConfig struct {
-	Db                dbSqlInterface  // Db instance
+	Db                *sql.DB         // Db instance
 	Log               silog.Logger    // Log instance
 	FilePath          string          // Path to write file
 	ServerId          int             // Current server id
@@ -145,6 +145,7 @@ func (m *Writer) getQueryData() []string {
 
 // Read files with sql
 func (m *Writer) readFiles() error {
+	var deletedFileCounter int
 	files, err := ioutil.ReadDir("./" + m.config.FilePath)
 	if err != nil {
 		m.config.Log.Error("Cannot read from file", err)
@@ -155,6 +156,7 @@ func (m *Writer) readFiles() error {
 			return nil
 		}
 		if strings.Contains(f.Name(), "deleted") { //if transaction failed file would be marked deleted, we should skip it
+			deletedFileCounter++
 			continue
 		}
 		b, err := ioutil.ReadFile(m.config.FilePath + f.Name())
@@ -196,18 +198,11 @@ func (m *Writer) readFiles() error {
 		}
 		fileCounter++
 	}
-	if len(files) > 0 {
+	if len(files)-deletedFileCounter > 0 {
 		m.attemps = 0
 	}
 
 	return nil
-}
-
-type dbSqlInterface interface {
-	Begin() (*sql.Tx, error)
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Ping() error
-	SetConnMaxLifetime(duration time.Duration)
 }
 
 type ShutdownControl interface {
