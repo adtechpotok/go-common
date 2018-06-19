@@ -22,6 +22,7 @@ type WriteConfig struct {
 	TickTimeMs        time.Duration   // Tick for work
 	MaxConnectTimeSec time.Duration   // Connect max time limit
 	ShutdownControl   ShutdownControl // Shutdown switcher
+	NoStart           bool
 }
 
 // Write sql to DB or file
@@ -38,8 +39,9 @@ func New(config WriteConfig) *Writer {
 	config.FilePath = strings.TrimRight(config.FilePath, "/") + "/"
 	m := &Writer{config: config}
 	m.mutex = &sync.RWMutex{}
-	go m.work()
-
+	if !m.config.NoStart {
+		go m.work()
+	}
 	return m
 }
 
