@@ -46,7 +46,7 @@ func TestAppend(t *testing.T) {
 		sucessTransaction(mock)
 	}
 
-	config := WriteConfig{db, logInstance, testSqlDir, 1, 10, 100, shutdown}
+	config := WriteConfig{Db: db, Log: logInstance, FilePath: testSqlDir, ServerId: 1, TickTimeMs: 10, MaxConnectTimeSec: 100, ShutdownControl: shutdown}
 	m := New(config)
 	for i := 0; i < 105; i++ {
 		/* записываем успешно все данные */
